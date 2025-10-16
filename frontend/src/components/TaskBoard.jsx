@@ -4,6 +4,7 @@ import TaskCard from "./TaskCard";
 export default function TaskBoard({ token, onLogout }) {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
 
   const fetchTasks = async () => {
     const res = await fetch("/api/tasks", {
@@ -21,9 +22,10 @@ export default function TaskBoard({ token, onLogout }) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ title }),
+      body: JSON.stringify({ title, description }),
     });
     setTitle("");
+    setDescription("");
     fetchTasks();
   };
 
@@ -35,6 +37,27 @@ export default function TaskBoard({ token, onLogout }) {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ status: newStatus }),
+    });
+    fetchTasks();
+  };
+
+  const updateTask = async (id, newData) => {
+    await fetch(`/api/tasks/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(newData),
+    });
+    fetchTasks();
+  };
+
+  const deleteTask = async (id) => {
+    if (!confirm("Vuoi davvero eliminare questo task?")) return;
+    await fetch(`/api/tasks/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
     });
     fetchTasks();
   };
@@ -52,13 +75,20 @@ export default function TaskBoard({ token, onLogout }) {
 
   return (
     <div className="w-full max-w-5xl">
-      <div className="flex justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
         <input
           type="text"
-          placeholder="Nuovo task..."
-          className="border rounded px-3 py-2 w-2/3"
+          placeholder="Titolo task..."
+          className="border rounded px-3 py-2 flex-1"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Descrizione (opzionale)"
+          className="border rounded px-3 py-2 flex-1"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
         />
         <button
           onClick={addTask}
@@ -74,7 +104,7 @@ export default function TaskBoard({ token, onLogout }) {
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {columns.map((col) => (
           <div
             key={col}
@@ -86,7 +116,13 @@ export default function TaskBoard({ token, onLogout }) {
             {tasks
               .filter((t) => t.status === col)
               .map((t) => (
-                <TaskCard key={t.id} task={t} moveTask={moveTask} />
+                <TaskCard
+                  key={t.id}
+                  task={t}
+                  moveTask={moveTask}
+                  updateTask={updateTask}
+                  deleteTask={deleteTask}
+                />
               ))}
           </div>
         ))}
