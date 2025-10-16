@@ -1,5 +1,11 @@
 import express from "express";
-import { getTasks, createTask, updateTask, deleteTask } from "../controller/taskController.js";
+import {
+  getTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+  moveTask
+} from "../controller/taskController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -13,5 +19,7 @@ router.route("/")
 router.route("/:id")
   .put(updateTask)
   .delete(deleteTask);
+
+router.patch("/:id/move", moveTask);
 
 export default router;
